@@ -42,6 +42,23 @@ exec(command: str, working_dir: str = None) -> str
 - Output is truncated at 10,000 characters
 - Optional `restrictToWorkspace` config to limit paths
 
+## Calendar
+
+### calendar
+Query Google Calendar events or run authorization flow.
+```
+calendar(
+  action: str,                 # "today" | "auth"
+  json_output: bool = false,   # optional, for action="today"
+  timeout: int = 60,           # optional, for action="today"
+  retries: int = 3             # optional, for action="today"
+) -> str
+```
+
+Notes:
+- Uses Google Calendar API directly from the tool implementation
+- Use `action="auth"` only when token/credentials need setup or refresh
+
 ## Web Access
 
 ### web_search

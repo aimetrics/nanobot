@@ -877,6 +877,97 @@ def status():
                 has_key = bool(p.api_key)
                 console.print(f"{spec.label}: {'[green]✓[/green]' if has_key else '[dim]not set[/dim]'}")
 
+# ============================================================================
+# Heartbeat Commands
+# ============================================================================
+
+heartbeat_app = typer.Typer(help="Manage heartbeat tasks")
+app.add_typer(heartbeat_app, name="heartbeat")
+
+
+@heartbeat_app.command("trigger")
+def heartbeat_trigger():
+    """Trigger a heartbeat check immediately."""
+    asyncio.run(_trigger_heartbeat())
+
+
+async def _trigger_heartbeat():
+    """Execute a heartbeat check now."""
+    from nanobot.config.loader import load_config
+    from nanobot.bus.queue import MessageBus
+    from nanobot.agent.loop import AgentLoop
+    from nanobot.session.manager import SessionManager
+    from nanobot.heartbeat.service import HeartbeatService
+    
+    console.print(f"{__logo__} Triggering heartbeat check...\n")
+    
+    # Load configuration
+    config = load_config()
+    
+    # Initialize services
+    bus = MessageBus()
+    provider = _make_provider(config)
+    session_manager = SessionManager(config.workspace_path)
+    
+    # Create agent
+    agent = AgentLoop(
+        bus=bus,
+        provider=provider,
+        workspace=config.workspace_path,
+        model=config.agents.defaults.model,
+        max_iterations=config.agents.defaults.max_tool_iterations,
+        brave_api_key=config.tools.web.search.api_key or None,
+        exec_config=config.tools.exec,
+        cron_service=None,
+        restrict_to_workspace=config.tools.restrict_to_workspace,
+        session_manager=session_manager,
+    )
+    
+    # Create heartbeat service
+    async def on_heartbeat(prompt: str) -> str:
+        """Execute heartbeat through the agent."""
+        return await agent.process_direct(prompt, session_key="heartbeat")
+    
+    heartbeat = HeartbeatService(
+        workspace=config.workspace_path,
+        on_heartbeat=on_heartbeat,
+        interval_s=60 * 60,  # Not used for manual trigger
+        enabled=True
+    )
+    
+    # Check if HEARTBEAT.md exists
+    if not heartbeat.heartbeat_file.exists():
+        console.print(f"[yellow]Warning: {heartbeat.heartbeat_file} not found[/yellow]")
+        console.print("Create this file in your workspace to define heartbeat tasks.")
+        return
+    
+    # Display HEARTBEAT.md content
+    content = heartbeat._read_heartbeat_file()
+    if content:
+        console.print(Panel(
+            Markdown(content),
+            title="HEARTBEAT.md",
+            border_style="blue"
+        ))
+        console.print()
+    
+    # Trigger the heartbeat
+    try:
+        console.print("[cyan]Executing heartbeat...[/cyan]\n")
+        response = await heartbeat.trigger_now()
+        
+        if response:
+            console.print(Panel(
+                Markdown(response),
+                title="Agent Response",
+                border_style="green"
+            ))
+        else:
+            console.print("[yellow]No response from agent[/yellow]")
+            
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
 
 if __name__ == "__main__":
     app()
