@@ -9,6 +9,9 @@ If this file has no tasks (only headers and comments), the agent will skip the h
 
 <!-- Add your periodic tasks below this line -->
 
+- Use the `calendar` tool to check today's calendar events (`action="today"`).
+- If there are events within the next 2 hours, send a concise reminder with time and title.
+- If calendar has no urgent action, respond with HEARTBEAT_OK.
 
 ## Completed
 
