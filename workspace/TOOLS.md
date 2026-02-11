@@ -48,16 +48,26 @@ exec(command: str, working_dir: str = None) -> str
 Query Google Calendar events or run authorization flow.
 ```
 calendar(
-  action: str,                 # "today" | "auth"
+  action: str,                 # "today" | "auth" | "create"
   json_output: bool = false,   # optional, for action="today"
   timeout: int = 60,           # optional, for action="today"
-  retries: int = 3             # optional, for action="today"
+  retries: int = 3,            # optional
+  title: str = None,           # optional, for action="create"
+  start: str = None,           # optional ISO datetime with timezone
+  end: str = None,             # optional ISO datetime with timezone
+  location: str = None,        # optional, for action="create"
+  description: str = None,     # optional, for action="create"
+  text: str = None             # optional natural language, e.g. "17:30-19:00跑步"
 ) -> str
 ```
 
 Notes:
 - Uses Google Calendar API directly from the tool implementation
 - Use `action="auth"` only when token/credentials need setup or refresh
+- `action="create"` writes to the primary calendar via Google Calendar `events.insert`
+- For `action="create"`, you can provide either:
+  - `title + start + end` (ISO datetime with timezone), or
+  - `text` in time-range format (defaults to local timezone; today unless the start time already passed, then tomorrow)
 
 ## Web Access
 
