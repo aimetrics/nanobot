@@ -194,13 +194,6 @@ uv tool upgrade nanobot-ai
 nanobot --version
 ```
 
-**Using WhatsApp?** Rebuild the local bridge after upgrading:
-
-```bash
-rm -rf ~/.nanobot/bridge
-nanobot channels login whatsapp
-```
-
 ## 🚀 Quick Start
 
 > [!TIP]
@@ -262,7 +255,6 @@ Connect nanobot to your favorite chat platform. Want to build your own? See the 
 |---------|---------------|
 | **Telegram** | Bot token from @BotFather |
 | **Discord** | Bot token + Message Content intent |
-| **WhatsApp** | QR code scan (`nanobot channels login whatsapp`) |
 | **WeChat (Weixin)** | QR code scan (`nanobot channels login weixin`) |
 | **Feishu** | App ID + App Secret |
 | **DingTalk** | App Key + App Secret |
@@ -479,47 +471,6 @@ for reliable encryption, password login is recommended instead. If the
 ```bash
 nanobot gateway
 ```
-
-</details>
-
-<details>
-<summary><b>WhatsApp</b></summary>
-
-Requires **Node.js ≥18**.
-
-**1. Link device**
-
-```bash
-nanobot channels login whatsapp
-# Scan QR with WhatsApp → Settings → Linked Devices
-```
-
-**2. Configure**
-
-```json
-{
-  "channels": {
-    "whatsapp": {
-      "enabled": true,
-      "allowFrom": ["+1234567890"]
-    }
-  }
-}
-```
-
-**3. Run** (two terminals)
-
-```bash
-# Terminal 1
-nanobot channels login whatsapp
-
-# Terminal 2
-nanobot gateway
-```
-
-> WhatsApp bridge updates are not applied automatically for existing installations.
-> After upgrading nanobot, rebuild the local bridge with:
-> `rm -rf ~/.nanobot/bridge && nanobot channels login whatsapp`
 
 </details>
 
@@ -904,7 +855,7 @@ IMAP_PASSWORD=your-password-here
 ### Providers
 
 > [!TIP]
-> - **Voice transcription**: Voice messages (Telegram, WhatsApp) are automatically transcribed using Whisper. By default Groq is used (free tier). Set `"transcriptionProvider": "openai"` under `channels` to use OpenAI Whisper instead — the API key is picked from the matching provider config.
+> - **Voice transcription**: Voice messages (Telegram) are automatically transcribed using Whisper. By default Groq is used (free tier). Set `"transcriptionProvider": "openai"` under `channels` to use OpenAI Whisper instead — the API key is picked from the matching provider config.
 > - **MiniMax Coding Plan**: Exclusive discount links for the nanobot community: [Overseas](https://platform.minimax.io/subscribe/coding-plan?code=9txpdXw04g&source=link) · [Mainland China](https://platform.minimaxi.com/subscribe/token-plan?code=GILTJpMTqZ&source=link)
 > - **MiniMax (Mainland China)**: If your API key is from MiniMax's mainland China platform (minimaxi.com), set `"apiBase": "https://api.minimaxi.com/v1"` in your minimax provider config.
 > - **VolcEngine / BytePlus Coding Plan**: Use dedicated providers `volcengineCodingPlan` or `byteplusCodingPlan` instead of the pay-per-use `volcengine` / `byteplus` providers.
