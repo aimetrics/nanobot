@@ -43,6 +43,7 @@ Each device entry in the output contains a `did`, which will be used in subseque
 ### 3. Control Devices
 
 ```bash
+# 
 # Turn on the light
 python -m mijiaAPI set --did "123456789" --prop_name "on" --value True
 
