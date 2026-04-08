@@ -6,8 +6,8 @@
 
 import json
 from typing import List, Dict, Any, Optional
-from wx_rss.logger import get_logger
-from wx_rss.exceptions import FetchError
+from .logger import get_logger
+from .exceptions import FetchError
 
 
 class FeedSearcher:

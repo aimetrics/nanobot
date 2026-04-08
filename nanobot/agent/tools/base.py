@@ -166,6 +166,11 @@ class Tool(ABC):
         """Whether this tool should run alone even if concurrency is enabled."""
         return False
 
+    @property
+    def max_result_chars(self) -> int | None:
+        """Per-tool override for max_tool_result_chars. None means use the global default."""
+        return None
+
     @abstractmethod
     async def execute(self, **kwargs: Any) -> Any:
         """Run the tool; returns a string or list of content blocks."""

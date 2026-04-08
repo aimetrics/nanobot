@@ -12,10 +12,12 @@ from .json_feed import JSONFeedGenerator
 from .search import FeedSearcher
 from .exceptions import *
 from .logger import get_logger
+from .tool import WeChatRSSTool
 
 __version__ = "0.2.0"
 __all__ = [
     "WeChatMP",
+    "WeChatRSSTool",
     "WeChatAuth",
     "ArticleFetcher",
     "JSONFeedGenerator",
@@ -111,6 +113,44 @@ class WeChatMP:
         else:
             return self._fetcher.fetch(fakeid, count)
 
+    def fetch_articles_since(
+        self,
+        fakeid: str,
+        since_timestamp: int,
+        with_content: bool = False
+    ) -> list:
+        """获取指定时间戳之后发布的文章
+
+        Args:
+            fakeid: 公众号 fake_id
+            since_timestamp: Unix 时间戳（秒），只返回此时间之后的文章
+            with_content: 是否包含正文内容
+
+        Returns:
+            文章列表
+        """
+        if not self._is_logged_in:
+            raise LoginError("请先登录")
+
+        if not self._fetcher:
+            raise LoginError("抓取器未初始化，请先登录")
+
+        self._logger.info(f"获取文章(since={since_timestamp}): fakeid={fakeid}")
+        articles = self._fetcher.fetch_since(fakeid, since_timestamp)
+
+        if with_content and articles:
+            for i, article in enumerate(articles):
+                try:
+                    import time as _time
+                    content = self._fetcher._fetch_article_content(article["url"])
+                    article["content"] = content
+                    _time.sleep(1)
+                except Exception as e:
+                    self._logger.warning(f"获取文章正文失败: {article.get('title')}, {e}")
+                    article["content"] = ""
+
+        return articles
+
     def generate_json_feed(
         self,
         mp_name: str,
@@ -200,7 +240,7 @@ class WeChatMP:
         Example:
             >>> mp = WeChatMP()
             >>> mp.login()
-            >>> fakeid = mp.get_feed_fakeid("精神抖擞王大鹏")
+            >>> fakeid = mp.get_feed_fakeid("机器之心")
             >>> print(fakeid)
             'MjM5NTI2...'
         """

@@ -477,6 +477,11 @@ class AgentRunner:
         tool_name: str,
         result: Any,
     ) -> Any:
+        # Per-tool override for max result chars
+        tool = spec.tools.get(tool_name) if spec.tools else None
+        tool_limit = (tool.max_result_chars if tool and tool.max_result_chars is not None else None)
+        max_chars = tool_limit if tool_limit is not None else spec.max_tool_result_chars
+
         result = ensure_nonempty_tool_result(tool_name, result)
         try:
             content = maybe_persist_tool_result(
@@ -484,7 +489,7 @@ class AgentRunner:
                 spec.session_key,
                 tool_call_id,
                 result,
-                max_chars=spec.max_tool_result_chars,
+                max_chars=max_chars,
             )
         except Exception as exc:
             logger.warning(
@@ -494,8 +499,8 @@ class AgentRunner:
                 exc,
             )
             content = result
-        if isinstance(content, str) and len(content) > spec.max_tool_result_chars:
-            return truncate_text(content, spec.max_tool_result_chars)
+        if isinstance(content, str) and len(content) > max_chars:
+            return truncate_text(content, max_chars)
         return content
 
     def _apply_tool_result_budget(

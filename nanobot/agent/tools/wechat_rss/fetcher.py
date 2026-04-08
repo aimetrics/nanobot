@@ -337,14 +337,38 @@ class ArticleFetcher:
                     if not appmsgex:
                         continue
 
+                    # 发布批次时间：尝试多个层级
+                    # 1) item 顶层 publish_time（批次级别）
+                    batch_time = item.get("publish_time")
+                    # 2) publish_info.sent_info.time
+                    if not batch_time:
+                        sent_info = publish_info.get("sent_info", {})
+                        batch_time = sent_info.get("time")
+
+                    # 首篇文章时记录调试日志，帮助排查时间字段
+                    if not articles and appmsgex:
+                        first = appmsgex[0]
+                        self._logger.debug(
+                            f"时间字段调试: item.publish_time={item.get('publish_time')}, "
+                            f"sent_info.time={publish_info.get('sent_info', {}).get('time')}, "
+                            f"create_time={first.get('create_time')}, "
+                            f"update_time={first.get('update_time')}"
+                        )
+
                     for article_data in appmsgex:
+                        # 时间优先级: batch_time > create_time > update_time
+                        raw_time = (
+                            batch_time
+                            or article_data.get("create_time")
+                            or article_data.get("update_time")
+                        )
                         article = {
                             "id": self._extract_article_id(article_data.get("link", "")),
                             "title": article_data.get("title", ""),
                             "url": article_data.get("link", ""),
                             "cover": article_data.get("cover", ""),
                             "digest": article_data.get("digest", ""),
-                            "publish_time": self._parse_publish_time(article_data.get("update_time")),
+                            "publish_time": self._parse_publish_time(raw_time),
                             "author": "",  # API 不返回作者信息
                             "content": ""
                         }

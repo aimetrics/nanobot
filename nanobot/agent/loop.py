@@ -37,7 +37,7 @@ from nanobot.utils.helpers import image_placeholder_text, truncate_text
 from nanobot.utils.runtime import EMPTY_FINAL_RESPONSE_MESSAGE
 
 if TYPE_CHECKING:
-    from nanobot.config.schema import ChannelsConfig, ExecToolConfig, WebToolsConfig
+    from nanobot.config.schema import ChannelsConfig, ExecToolConfig, WeChatRSSConfig, WebToolsConfig
     from nanobot.cron.service import CronService
 
 
@@ -174,6 +174,7 @@ class AgentLoop:
         provider_retry_mode: str = "standard",
         web_config: WebToolsConfig | None = None,
         exec_config: ExecToolConfig | None = None,
+        wechat_rss_config: WeChatRSSConfig | None = None,
         cron_service: CronService | None = None,
         restrict_to_workspace: bool = False,
         session_manager: SessionManager | None = None,
@@ -182,7 +183,7 @@ class AgentLoop:
         timezone: str | None = None,
         hooks: list[AgentHook] | None = None,
     ):
-        from nanobot.config.schema import ExecToolConfig, WebToolsConfig
+        from nanobot.config.schema import ExecToolConfig, WeChatRSSConfig, WebToolsConfig
 
         defaults = AgentDefaults()
         self.bus = bus
@@ -207,6 +208,7 @@ class AgentLoop:
         self.provider_retry_mode = provider_retry_mode
         self.web_config = web_config or WebToolsConfig()
         self.exec_config = exec_config or ExecToolConfig()
+        self.wechat_rss_config = wechat_rss_config or WeChatRSSConfig()
         self.cron_service = cron_service
         self.restrict_to_workspace = restrict_to_workspace
         self._start_time = time.time()
@@ -286,6 +288,13 @@ class AgentLoop:
             self.tools.register(
                 CronTool(self.cron_service, default_timezone=self.context.timezone or "UTC")
             )
+        if self.wechat_rss_config.enable:
+            from nanobot.agent.tools.wechat_rss.tool import WeChatRSSTool
+            token_path = str(self.workspace / self.wechat_rss_config.token_file)
+            self.tools.register(WeChatRSSTool(
+                token_file=token_path,
+                workspace=self.workspace,
+            ))
 
     async def _connect_mcp(self) -> None:
         """Connect to configured MCP servers (one-time, lazy)."""
